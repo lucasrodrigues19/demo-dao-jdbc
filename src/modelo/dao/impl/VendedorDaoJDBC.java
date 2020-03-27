@@ -78,7 +78,7 @@ public class VendedorDaoJDBC implements VendedorDAO {
 		sql = "update vendedor set salarioBase = salarioBase + 200 where id = ?";
 		try {
 			conn.setAutoCommit(false);
-			st = (PreparedStatement) conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+			st = (PreparedStatement) conn.prepareStatement(sql);
 			st.setInt(1, obj.getId());
 			int rows = st.executeUpdate();
 			conn.commit();
