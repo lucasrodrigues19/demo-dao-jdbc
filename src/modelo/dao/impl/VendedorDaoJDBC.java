@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.mysql.jdbc.PreparedStatement;
+import com.mysql.jdbc.SQLError;
 
 import db.DB;
 import db.DbException;
@@ -69,7 +70,32 @@ public class VendedorDaoJDBC implements VendedorDAO {
 
 	@Override
 	public void atualizar(Vendedor obj) {
-		// TODO Auto-generated method stub
+		if (obj == null)
+			throw new DbException("vededor nulo");
+
+		PreparedStatement st = null;
+		ResultSet rs = null;
+		sql = "update vendedor set salarioBase = salarioBase + 200 where id = ?";
+		try {
+			conn.setAutoCommit(false);
+			st = (PreparedStatement) conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+			st.setInt(1, obj.getId());
+			int rows = st.executeUpdate();
+			conn.commit();
+			System.out.println("Linhas atualizadas: "+rows);
+		} catch (SQLException e) {
+			try {
+				conn.rollback();
+				e.printStackTrace();
+				System.out.println("Erro na transanção: " + e.getMessage());
+			} catch (SQLException e1) {
+				e.printStackTrace();
+				System.out.println("Erro no roolback: " + e.getMessage());
+			}
+		} finally {
+			DB.closeStatement(st);
+			DB.closeResultSet(rs);
+		}
 
 	}
 

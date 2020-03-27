@@ -23,7 +23,7 @@ public class DB {
 				String url = props.getProperty("dburl");
 				conn = DriverManager.getConnection(url, props);
 			} catch (SQLException e) {
-				throw new DbException(e.getMessage());
+				throw new DbException("Erro ao conectar: "+e.getMessage());
 			}
 		}
 		return conn;
