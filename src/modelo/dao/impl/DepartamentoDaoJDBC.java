@@ -64,13 +64,64 @@ public class DepartamentoDaoJDBC implements DepartamentoDAO {
 
 	@Override
 	public void atualizar(Departamento obj) {
-		// TODO Auto-generated method stub
+		if (obj == null)
+			throw new DbException("Id nulo");
 
+		sql = "update departamento set nome = ? where id = ?";
+		PreparedStatement st = null;
+		try {
+			conn.setAutoCommit(false);
+			st = (PreparedStatement) conn.prepareStatement(sql);
+			st.setString(1, obj.getNome());
+			st.setInt(2, obj.getId());
+			int rows = st.executeUpdate();
+			if (rows == 0)
+				throw new DbException("Nenhuma linha afetada!");
+
+			conn.commit();
+		} catch (SQLException e) {
+			try {
+				conn.rollback();
+				e.printStackTrace();
+				throw new DbException("erro na transancao: " + e.getMessage());
+			} catch (SQLException e1) {
+				e.printStackTrace();
+				throw new DbException("Erro no rollback: " + e1.getMessage());
+			}
+		} finally {
+			DB.closeStatement(st);
+		}
 	}
 
 	@Override
 	public void deletarPorID(Integer id) {
-		// TODO Auto-generated method stub
+		if (id == null)
+			throw new DbException("Id nulo");
+
+		sql = "delete from departamento where id = ?";
+		PreparedStatement st = null;
+
+		try {
+			conn.setAutoCommit(false);
+			st = (PreparedStatement) conn.prepareStatement(sql);
+			st.setInt(1, id);
+			int rows = st.executeUpdate();
+			if (rows == 0)
+				throw new DbException("Nenhuma linha afetada!");
+
+			conn.commit();
+		} catch (SQLException e) {
+			try {
+				conn.rollback();
+				e.printStackTrace();
+				throw new DbException("erro na transancao: " + e.getMessage());
+			} catch (SQLException e1) {
+				e.printStackTrace();
+				throw new DbException("Erro no rollback: " + e1.getMessage());
+			}
+		} finally {
+			DB.closeStatement(st);
+		}
 
 	}
 
