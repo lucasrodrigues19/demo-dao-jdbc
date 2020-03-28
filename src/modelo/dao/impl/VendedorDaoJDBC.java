@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.mysql.jdbc.PreparedStatement;
+import com.mysql.jdbc.SQLError;
 
 import db.DB;
 import db.DbException;
@@ -56,7 +57,7 @@ public class VendedorDaoJDBC implements VendedorDAO {
 					obj.setId(id);
 				}
 			}else {
-				throw new DbException("Erro insesperado: ");
+				throw new DbException("Nenhuma linha afetada: ");
 			}
 			conn.commit();
 		} catch (SQLException e) {
@@ -89,7 +90,9 @@ public class VendedorDaoJDBC implements VendedorDAO {
 			st.setDouble(4, obj.getBaseSalario());
 			st.setInt(5, obj.getDepartamento().getId());
 			st.setInt(6, obj.getId());
-			st.executeUpdate();
+			int rows = st.executeUpdate();
+			if(rows == 0)
+				throw new DbException("Nenhuma linha afetada!");
 			conn.commit();
 		} catch (SQLException e) {
 			try {
@@ -109,8 +112,30 @@ public class VendedorDaoJDBC implements VendedorDAO {
 
 	@Override
 	public void deletarPorID(Integer id) {
-		// TODO Auto-generated method stub
-
+		if(id == null)
+			throw new DbException("O id esta nulo");
+		sql = "delete from vendedor where id = ?";
+		PreparedStatement st = null;
+		try {
+			conn.setAutoCommit(false);
+			st = (PreparedStatement) conn.prepareStatement(sql);
+			st.setInt(1, id);
+		    int rows = st.executeUpdate();
+		    if(rows == 0)
+				throw new DbException("Nenhuma linha afetada!");
+			conn.commit();
+		} catch (SQLException e) {
+			try {
+				conn.rollback();
+				e.printStackTrace();
+				throw new DbException("Erro na transanção");
+			}catch(SQLException e1) {
+				e.printStackTrace();
+				throw new DbException("Erro no rollback");
+			}finally {
+				DB.closeStatement(st);
+			}
+		}
 	}
 
 	@Override
@@ -180,7 +205,7 @@ public class VendedorDaoJDBC implements VendedorDAO {
 			Departamento dpt = null;
 			while (rs.next()) {
 				// departamento 1 --- N vendedores.
-				// O vendedor vai fazer apontar apenas para um objeto departamento
+				// O vendedor aponta apenas para um objeto departamento
 				if(dptMap != null && dptMap.size() > 0) {
 					if(!dptMap.containsKey(rs.getInt("dptId"))){
 					 dpt = dptMap.get(rs.getInt("dptId"));

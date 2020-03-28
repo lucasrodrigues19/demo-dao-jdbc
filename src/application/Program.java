@@ -15,7 +15,7 @@ static SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
 		try {
 		VendedorDAO vendedorDAO = DaoFactory.criarVendedorDAO(DB.getConnection());
 		System.out.println("== pesquisar por id ==");
-		Vendedor ven = vendedorDAO.pesquisarPorID(10);
+		Vendedor ven = vendedorDAO.pesquisarPorID(6);
 		System.out.println(ven);
 		System.out.println("== pesquisarTodos ==");
 		List<Vendedor>vendedores = vendedorDAO.pesquisarTodos();
@@ -28,6 +28,7 @@ static SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
 		System.out.println("== pesquisarPorDepartamento ==");
 		List<Vendedor> vdpt = vendedorDAO.pesquisarPorDepartamento(ven.getDepartamento());
 		vdpt.forEach(v -> System.out.println(v));
+//		vendedorDAO.deletarPorID(10);
 		}catch(Exception e) {
 			e.printStackTrace();
 		}
