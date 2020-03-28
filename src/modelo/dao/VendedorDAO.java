@@ -17,5 +17,5 @@ public interface VendedorDAO {
 
 	List<Vendedor> pesquisarTodos();
 
-	List<Vendedor> pesquisarPorDepartamento(Integer dptId);
+	List<Vendedor> pesquisarPorDepartamento(Departamento dpt);
 }

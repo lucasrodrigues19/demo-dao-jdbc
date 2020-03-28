@@ -6,13 +6,15 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.mysql.jdbc.PreparedStatement;
-import com.mysql.jdbc.SQLError;
 
 import db.DB;
 import db.DbException;
+import helper.DBHelper;
 import modelo.dao.VendedorDAO;
 import modelo.entites.Departamento;
 import modelo.entites.Vendedor;
@@ -114,24 +116,12 @@ public class VendedorDaoJDBC implements VendedorDAO {
 		PreparedStatement st = null;
 		ResultSet rs = null;
 		Vendedor vendedor = null;
-		Departamento dpt = null;
 		try {
 			st = (PreparedStatement) conn.prepareStatement(sql);
 			st.setInt(1, id);
 			rs = st.executeQuery();
 			if (rs.first()) {
-				vendedor = new Vendedor();
-				dpt = new Departamento();
-				// departamento
-				dpt.setId(rs.getInt("dptId"));
-				dpt.setName(rs.getString("departamento.nome"));
-				// vendedor
-				vendedor.setId(rs.getInt("id"));
-				vendedor.setNome(rs.getString("nome"));
-				vendedor.setEmail(rs.getString("email"));
-				vendedor.setDataNasc(rs.getDate("dataNasc"));
-				vendedor.setBaseSalario(rs.getDouble("salarioBase"));
-				vendedor.setDepartamento(dpt);
+				vendedor = DBHelper.instanciarVendedorRs(rs, DBHelper.instanciarDepartamentoRs(rs));
 			}
 			return vendedor;
 		} catch (SQLException e) {
@@ -149,26 +139,12 @@ public class VendedorDaoJDBC implements VendedorDAO {
 		ResultSet rs = null;
 		List<Vendedor> result = new ArrayList<Vendedor>();
 		Vendedor vendedor = null;
-		Departamento dpt = null;
 		try {
 			sql = "select vendedor.* , departamento.nome from vendedor INNER JOIN departamento on vendedor.dptId = departamento.id";
 			st = conn.createStatement();
 			rs = st.executeQuery(sql);
 			while (rs.next()) {
-				vendedor = new Vendedor();
-				dpt = new Departamento();
-
-				// departamento
-				dpt.setId(rs.getInt("dptId"));
-				dpt.setName(rs.getString("departamento.nome"));
-				// vendedor
-				vendedor.setId(rs.getInt("id"));
-				vendedor.setNome(rs.getString("nome"));
-				vendedor.setDataNasc(rs.getDate("dataNasc"));
-				vendedor.setEmail(rs.getString("email"));
-				vendedor.setBaseSalario(rs.getDouble("salarioBase"));
-				vendedor.setDepartamento(dpt);
-				// adiciona a lista
+				vendedor = DBHelper.instanciarVendedorRs(rs, DBHelper.instanciarDepartamentoRs(rs));
 				result.add(vendedor);
 			}
 			return result;
@@ -181,39 +157,39 @@ public class VendedorDaoJDBC implements VendedorDAO {
 	}
 
 	@Override
-	public List<Vendedor> pesquisarPorDepartamento(Integer dptId) {
-		if (dptId == null)
+	public List<Vendedor> pesquisarPorDepartamento(Departamento obj) {
+		if (obj == null)
 			throw new DbException("Id do departamento esta nulo");
 
-		sql = "select vendedor.* , departamento.nome from vendedor INNER JOIN departamento on vendedor.dptId = departamento.id where dptId = ?";
+		sql = "select vendedor.* , departamento.nome from vendedor INNER JOIN departamento on vendedor.dptId = departamento.id where dptId = ? ORDER BY  vendedor.nome";
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		List<Vendedor> result = new ArrayList<Vendedor>();
+		Map<Integer, Departamento>dptMap = new HashMap<Integer, Departamento>();
 		Vendedor vendedor = null;
-		Departamento dpt = null;
 		try {
 			ps = (PreparedStatement) conn.prepareStatement(sql);
-			ps.setInt(1, dptId);
+			ps.setInt(1, obj.getId());
 			rs = ps.executeQuery();
+			Departamento dpt = null;
 			while (rs.next()) {
-				vendedor = new Vendedor();
-				dpt = new Departamento();
-
-				// departamento
-				dpt.setId(rs.getInt("dptId"));
-				dpt.setName(rs.getString("departamento.nome"));
-				// vendedor
-				vendedor.setId(rs.getInt("id"));
-				vendedor.setNome(rs.getString("nome"));
-				vendedor.setDataNasc(rs.getDate("dataNasc"));
-				vendedor.setEmail(rs.getString("email"));
-				vendedor.setBaseSalario(rs.getDouble("salarioBase"));
-				vendedor.setDepartamento(dpt);
-				// adiciona a lista
+				// departamento 1 --- N vendedores.
+				// O vendedor vai fazer referencia apenas para um objeto departamento
+				if(dptMap != null && dptMap.size() > 0) {
+					if(!dptMap.containsKey(rs.getInt("dptId"))){
+					 dpt = dptMap.get(rs.getInt("dptId"));
+					}
+				}else {
+					dpt = DBHelper.instanciarDepartamentoRs(rs);
+					dptMap.put(rs.getInt("dptId"), DBHelper.instanciarDepartamento(dpt));
+				}
+				
+				vendedor = DBHelper.instanciarVendedorRs(rs, DBHelper.instanciarDepartamento(dpt));
 				result.add(vendedor);
 			}
 			return result;
 		} catch (SQLException e) {
+			e.printStackTrace();
 			throw new DbException(e.getMessage());
 		} finally {
 			DB.closeStatement(ps);
