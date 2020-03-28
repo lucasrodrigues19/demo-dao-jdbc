@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 
 import com.mysql.jdbc.PreparedStatement;
-import com.mysql.jdbc.SQLError;
 
 import db.DB;
 import db.DbException;
@@ -27,7 +26,7 @@ public class VendedorDaoJDBC implements VendedorDAO {
 
 	public VendedorDaoJDBC(Connection conn) {
 		if (conn == null)
-			throw new DbException("conexao nula");
+			throw new DbException("Conexao nula");
 
 		this.conn = conn;
 	}
@@ -36,6 +35,7 @@ public class VendedorDaoJDBC implements VendedorDAO {
 	public void inserir(Vendedor obj) {
 		if (obj == null || obj.getDepartamento() == null)
 			throw new DbException("O vendedor esta nulo");
+
 		sql = "insert into vendedor VALUES (default,?,?,?,?,?)";
 		ResultSet rs = null;
 		PreparedStatement st = null;
@@ -56,7 +56,7 @@ public class VendedorDaoJDBC implements VendedorDAO {
 					int id = rs.getInt(1);
 					obj.setId(id);
 				}
-			}else {
+			} else {
 				throw new DbException("Nenhuma linha afetada: ");
 			}
 			conn.commit();
@@ -78,9 +78,9 @@ public class VendedorDaoJDBC implements VendedorDAO {
 		if (obj == null)
 			throw new DbException("vededor nulo");
 
+		sql = "update vendedor set nome = ?,email = ?,dataNasc = ?,salarioBase = ?,dptId = ? where id = ?";
 		PreparedStatement st = null;
 		ResultSet rs = null;
-		sql = "update vendedor set nome = ?,email = ?,dataNasc = ?,salarioBase = ?,dptId = ? where id = ?";
 		try {
 			conn.setAutoCommit(false);
 			st = (PreparedStatement) conn.prepareStatement(sql);
@@ -91,7 +91,7 @@ public class VendedorDaoJDBC implements VendedorDAO {
 			st.setInt(5, obj.getDepartamento().getId());
 			st.setInt(6, obj.getId());
 			int rows = st.executeUpdate();
-			if(rows == 0)
+			if (rows == 0)
 				throw new DbException("Nenhuma linha afetada!");
 			conn.commit();
 		} catch (SQLException e) {
@@ -112,16 +112,17 @@ public class VendedorDaoJDBC implements VendedorDAO {
 
 	@Override
 	public void deletarPorID(Integer id) {
-		if(id == null)
+		if (id == null)
 			throw new DbException("O id esta nulo");
+
 		sql = "delete from vendedor where id = ?";
 		PreparedStatement st = null;
 		try {
 			conn.setAutoCommit(false);
 			st = (PreparedStatement) conn.prepareStatement(sql);
 			st.setInt(1, id);
-		    int rows = st.executeUpdate();
-		    if(rows == 0)
+			int rows = st.executeUpdate();
+			if (rows == 0)
 				throw new DbException("Nenhuma linha afetada!");
 			conn.commit();
 		} catch (SQLException e) {
@@ -129,10 +130,10 @@ public class VendedorDaoJDBC implements VendedorDAO {
 				conn.rollback();
 				e.printStackTrace();
 				throw new DbException("Erro na transanção");
-			}catch(SQLException e1) {
+			} catch (SQLException e1) {
 				e.printStackTrace();
 				throw new DbException("Erro no rollback");
-			}finally {
+			} finally {
 				DB.closeStatement(st);
 			}
 		}
@@ -152,7 +153,7 @@ public class VendedorDaoJDBC implements VendedorDAO {
 			st.setInt(1, id);
 			rs = st.executeQuery();
 			if (rs.first()) {
-				vendedor = DBHelper.instanciarVendedorRs(rs, DBHelper.instanciarDepartamentoRs(rs));
+				vendedor = instanciarVendedorRs(rs, instanciarDepartamentoRs(rs));
 			}
 			return vendedor;
 		} catch (SQLException e) {
@@ -166,16 +167,16 @@ public class VendedorDaoJDBC implements VendedorDAO {
 	@Override
 	public List<Vendedor> pesquisarTodos() {
 
+		sql = "select vendedor.* , departamento.nome from vendedor INNER JOIN departamento on vendedor.dptId = departamento.id";
 		Statement st = null;
 		ResultSet rs = null;
 		List<Vendedor> result = new ArrayList<Vendedor>();
 		Vendedor vendedor = null;
 		try {
-			sql = "select vendedor.* , departamento.nome from vendedor INNER JOIN departamento on vendedor.dptId = departamento.id";
 			st = conn.createStatement();
 			rs = st.executeQuery(sql);
 			while (rs.next()) {
-				vendedor = DBHelper.instanciarVendedorRs(rs, DBHelper.instanciarDepartamentoRs(rs));
+				vendedor = instanciarVendedorRs(rs, instanciarDepartamentoRs(rs));
 				result.add(vendedor);
 			}
 			return result;
@@ -196,7 +197,7 @@ public class VendedorDaoJDBC implements VendedorDAO {
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		List<Vendedor> result = new ArrayList<Vendedor>();
-		Map<Integer, Departamento>dptMap = new HashMap<Integer, Departamento>();
+		Map<Integer, Departamento> dptMap = new HashMap<Integer, Departamento>();
 		Vendedor vendedor = null;
 		try {
 			ps = (PreparedStatement) conn.prepareStatement(sql);
@@ -206,16 +207,16 @@ public class VendedorDaoJDBC implements VendedorDAO {
 			while (rs.next()) {
 				// departamento 1 --- N vendedores.
 				// O vendedor aponta apenas para um objeto departamento
-				if(dptMap != null && dptMap.size() > 0) {
-					if(!dptMap.containsKey(rs.getInt("dptId"))){
-					 dpt = dptMap.get(rs.getInt("dptId"));
+				if (dptMap != null && dptMap.size() > 0) {
+					if (!dptMap.containsKey(rs.getInt("dptId"))) {
+						dpt = dptMap.get(rs.getInt("dptId"));
 					}
-				}else {
-					dpt = DBHelper.instanciarDepartamentoRs(rs);
+				} else {
+					dpt = instanciarDepartamentoRs(rs);
 					dptMap.put(rs.getInt("dptId"), DBHelper.instanciarDepartamento(dpt));
 				}
-				
-				vendedor = DBHelper.instanciarVendedorRs(rs, DBHelper.instanciarDepartamento(dpt));
+
+				vendedor = instanciarVendedorRs(rs, DBHelper.instanciarDepartamento(dpt));
 				result.add(vendedor);
 			}
 			return result;
@@ -229,4 +230,28 @@ public class VendedorDaoJDBC implements VendedorDAO {
 
 	}
 
+	// instancia o Departamento e Vendedor
+	private Vendedor instanciarVendedorRs(ResultSet rs, Departamento dpt) throws SQLException {
+		if (rs == null || dpt == null) {
+			throw new SQLException();
+		}
+		Vendedor vendedor = new Vendedor();
+		vendedor.setId(rs.getInt("id"));
+		vendedor.setNome(rs.getString("nome"));
+		vendedor.setDataNasc(rs.getDate("dataNasc"));
+		vendedor.setEmail(rs.getString("email"));
+		vendedor.setBaseSalario(rs.getDouble("salarioBase"));
+		vendedor.setDepartamento(dpt);
+		return vendedor;
+	}
+
+	private Departamento instanciarDepartamentoRs(ResultSet rs) throws SQLException {
+		if (rs == null)
+			throw new SQLException();
+
+		Departamento dpt = new Departamento();
+		dpt.setId(rs.getInt("dptId"));
+		dpt.setName(rs.getString("departamento.nome"));
+		return dpt;
+	}
 }
