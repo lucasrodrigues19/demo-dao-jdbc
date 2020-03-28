@@ -28,8 +28,38 @@ public class DepartamentoDaoJDBC implements DepartamentoDAO {
 
 	@Override
 	public void inserir(Departamento obj) {
-		// TODO Auto-generated method stub
+		if (obj == null)
+			throw new DbException("departamento nulo");
 
+		sql = "insert into departamento VALUES (default,?);";
+		PreparedStatement st = null;
+		ResultSet rs = null;
+		try {
+			conn.setAutoCommit(false);
+			st = (PreparedStatement) conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+			st.setString(1, obj.getNome());
+			int rows = st.executeUpdate();
+			if (rows > 0) {
+				rs = st.getGeneratedKeys();
+				if (rs.next())
+					obj.setId(rs.getInt(1));
+			} else {
+				throw new DbException("Nenhuma linha afetada: ");
+			}
+			conn.commit();
+		} catch (SQLException e) {
+			try {
+				conn.rollback();
+				e.printStackTrace();
+				throw new DbException("erro na transancao: " + e.getMessage());
+			} catch (SQLException e1) {
+				e.printStackTrace();
+				throw new DbException("Erro no rollback: " + e1.getMessage());
+			}
+		} finally {
+			DB.closeResultSet(rs);
+			DB.closeStatement(st);
+		}
 	}
 
 	@Override
@@ -76,11 +106,11 @@ public class DepartamentoDaoJDBC implements DepartamentoDAO {
 		sql = "select * from departamento";
 		Statement st = null;
 		ResultSet rs = null;
-		List<Departamento>result = new ArrayList<Departamento>();
+		List<Departamento> result = new ArrayList<Departamento>();
 		try {
-			st =  conn.createStatement();
+			st = conn.createStatement();
 			rs = st.executeQuery(sql);
-			while(rs.next()) {
+			while (rs.next()) {
 				result.add(instanciarDepartamentoRs(rs));
 			}
 			return result;
