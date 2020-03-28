@@ -15,14 +15,16 @@ static SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
 		try {
 		VendedorDAO vendedorDAO = DaoFactory.criarVendedorDAO(DB.getConnection());
 		System.out.println("== pesquisar por id ==");
-		Vendedor ven = vendedorDAO.pesquisarPorID(2);
+		Vendedor ven = vendedorDAO.pesquisarPorID(10);
 		System.out.println(ven);
 		System.out.println("== pesquisarTodos ==");
 		List<Vendedor>vendedores = vendedorDAO.pesquisarTodos();
 		vendedores.forEach(v->System.out.println(v));
 //		Vendedor ve = new Vendedor(2, "Marcos Junior", "marcos@gmail.com",sdf.parse("10/04/1999") , 3800.0, ven.getDepartamento());
 //		vendedorDAO.inserir(ve);
-//		vendedorDAO.atualizar(ven);
+		ven.setNome("Joao");
+		ven.setEmail("joao@gmail.com");
+		vendedorDAO.atualizar(ven);
 		System.out.println("== pesquisarPorDepartamento ==");
 		List<Vendedor> vdpt = vendedorDAO.pesquisarPorDepartamento(ven.getDepartamento());
 		vdpt.forEach(v -> System.out.println(v));

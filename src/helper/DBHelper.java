@@ -2,9 +2,6 @@ package helper;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-
-import com.mysql.jdbc.SQLError;
-
 import modelo.entites.Departamento;
 import modelo.entites.Vendedor;
 
@@ -13,7 +10,7 @@ public class DBHelper {
 	
 		public static Vendedor instanciarVendedorRs(ResultSet rs, Departamento dpt)throws SQLException {
 			if(rs == null || dpt == null) {
-				
+				throw new SQLException();
 			}
 			Vendedor vendedor = new Vendedor();
 			vendedor.setId(rs.getInt("id"));
@@ -31,6 +28,9 @@ public class DBHelper {
 			return vendedor;
 		}
 		public static Departamento instanciarDepartamentoRs(ResultSet rs)throws SQLException {
+			if(rs == null)
+				throw new SQLException();
+			
 			Departamento dpt = new Departamento();
 			dpt.setId(rs.getInt("dptId"));
 			dpt.setName(rs.getString("departamento.nome"));

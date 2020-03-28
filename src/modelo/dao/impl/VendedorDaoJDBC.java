@@ -53,8 +53,10 @@ public class VendedorDaoJDBC implements VendedorDAO {
 				rs = st.getGeneratedKeys();
 				if (rs.next()) {
 					int id = rs.getInt(1);
-					System.out.println("ID: " + id);
+					obj.setId(id);
 				}
+			}else {
+				throw new DbException("Erro insesperado: ");
 			}
 			conn.commit();
 		} catch (SQLException e) {
@@ -77,14 +79,18 @@ public class VendedorDaoJDBC implements VendedorDAO {
 
 		PreparedStatement st = null;
 		ResultSet rs = null;
-		sql = "update vendedor set salarioBase = salarioBase + 200 where id = ?";
+		sql = "update vendedor set nome = ?,email = ?,dataNasc = ?,salarioBase = ?,dptId = ? where id = ?";
 		try {
 			conn.setAutoCommit(false);
 			st = (PreparedStatement) conn.prepareStatement(sql);
-			st.setInt(1, obj.getId());
-			int rows = st.executeUpdate();
+			st.setString(1, obj.getNome());
+			st.setString(2, obj.getEmail());
+			st.setDate(3, new Date(obj.getDataNasc().getTime()));
+			st.setDouble(4, obj.getBaseSalario());
+			st.setInt(5, obj.getDepartamento().getId());
+			st.setInt(6, obj.getId());
+			st.executeUpdate();
 			conn.commit();
-			System.out.println("Linhas atualizadas: "+rows);
 		} catch (SQLException e) {
 			try {
 				conn.rollback();
@@ -174,7 +180,7 @@ public class VendedorDaoJDBC implements VendedorDAO {
 			Departamento dpt = null;
 			while (rs.next()) {
 				// departamento 1 --- N vendedores.
-				// O vendedor vai fazer referencia apenas para um objeto departamento
+				// O vendedor vai fazer apontar apenas para um objeto departamento
 				if(dptMap != null && dptMap.size() > 0) {
 					if(!dptMap.containsKey(rs.getInt("dptId"))){
 					 dpt = dptMap.get(rs.getInt("dptId"));
